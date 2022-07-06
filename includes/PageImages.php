@@ -269,7 +269,21 @@ class PageImages {
 		// Multiple images are supported according to https://ogp.me/#array
 		// See https://developers.facebook.com/docs/sharing/best-practices?locale=en_US#images
 		// See T282065: WhatsApp expects an image <300kB
+		$maxWidth = $imageFile->getWidth();
+		// WGL - Hack around transform() not failing for larger than original images.
+		if ( $maxWidth < 640 ) {
+			$out->addMeta( 'og:image', wfExpandUrl( $imageFile->getUrl(), PROTO_CANONICAL ) );
+			$out->addMeta( 'og:image:width', strval( $imageFile->getWidth() ) );
+			$out->addMeta( 'og:image:height', strval( $imageFile->getHeight() ) );
+			return;
+		}
+
 		foreach ( [ 1200, 800, 640 ] as $width ) {
+			// WGL - Hack around transform() not failing for larger than original images.
+			if ( $width > $maxWidth ) {
+				continue;
+			}
+
 			$thumb = $imageFile->transform( [ 'width' => $width ] );
 			if ( !$thumb ) {
 				continue;
