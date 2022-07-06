@@ -288,15 +288,19 @@ class PageImages implements
 	 * @param Skin $skin Skin object used to generate the page. Ignored
 	 */
 	public function onBeforePageDisplay( $out, $skin ): void {
+		global $wgLogo;
 		if ( !$out->getConfig()->get( 'PageImagesOpenGraph' ) ) {
 			return;
 		}
+		// WGL - Use wiki logo as image for main page.
+		if ( $out->getContext()->getTitle()->isMainPage() ) {
+			$out->addMeta( 'og:image', wfExpandUrl( $wgLogo, PROTO_CANONICAL ) );
+			return;
+		}
 		$imageFile = self::getPageImage( $out->getContext()->getTitle() );
+		// WGL - Use wiki logo as fallback image.
 		if ( !$imageFile ) {
-			$fallback = $out->getConfig()->get( 'PageImagesOpenGraphFallbackImage' );
-			if ( $fallback ) {
-				$out->addMeta( 'og:image', wfExpandUrl( $fallback, PROTO_CANONICAL ) );
-			}
+			$out->addMeta( 'og:image', wfExpandUrl( $wgLogo, PROTO_CANONICAL ) );
 			return;
 		}
 
