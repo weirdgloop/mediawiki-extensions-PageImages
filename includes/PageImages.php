@@ -305,6 +305,20 @@ class PageImages implements
 		// See https://developers.facebook.com/docs/sharing/best-practices?locale=en_US#images
 		// T295521: Updated in 2025, WhatsApp expects images >300px, but <600KB
 		// See https://developers.facebook.com/docs/whatsapp/link-previews/
+		// WGL start - Hack around transform() not failing for larger than original images.
+		$maxWidth = $imageFile->getWidth();
+		if ( $maxWidth <= 1200 ) {
+			if ( $imageFile->getUrl() ) {
+				$url = $this->urlUtils->expand( $imageFile->getUrl(), PROTO_CANONICAL );
+				if ( $url ) {
+					$out->addMeta( 'og:image', $url );
+					$out->addMeta( 'og:image:width', (string)$imageFile->getWidth() );
+					$out->addMeta( 'og:image:height', (string)$imageFile->getHeight() );
+				}
+			}
+			return;
+		}
+		// WGL end
 		$thumb = $imageFile->transform( [ 'width' => 1200, 'height' => 1200 ] );
 		if ( $thumb && $thumb->getUrl() ) {
 			$url = $this->urlUtils->expand( $thumb->getUrl(), PROTO_CANONICAL );
