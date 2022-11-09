@@ -7,6 +7,8 @@ use ApiMain;
 use FauxRequest;
 use File;
 use IContextSource;
+use MapCacheLRU;
+use MediaWiki\Cache\CacheKeyHelper;
 use MediaWiki\MediaWikiServices;
 use OutputPage;
 use Skin;
@@ -48,6 +50,9 @@ class PageImages {
 	 */
 	public const PROP_NAME_FREE = 'page_image_free';
 
+	/** @var MapCacheLRU */
+	private static $cache = null;
+
 	/**
 	 * Get property name used in page_props table. When a page image
 	 * is stored it will be stored under this property name on the corresponding
@@ -86,6 +91,13 @@ class PageImages {
 	 * @return File|bool
 	 */
 	public static function getPageImage( Title $title ) {
+		$cacheKey = CacheKeyHelper::getKeyForPage( $title );
+		if ( self::$cache === null ) {
+			self::$cache = new MapCacheLRU( 100 );
+		}
+		if ( self::$cache->has( $cacheKey ) ) {
+			return self::$cache->get( $cacheKey );
+		}
 		// Do not query for special pages or other titles never in the database
 		if ( !$title->canExist() ) {
 			return false;
@@ -97,6 +109,7 @@ class PageImages {
 
 		if ( !$title->exists() ) {
 			// No page id to select from
+			self::$cache->set( $cacheKey, false );
 			return false;
 		}
 
@@ -116,6 +129,7 @@ class PageImages {
 			$file = MediaWikiServices::getInstance()->getRepoGroup()->findFile( $fileName );
 		}
 
+		self::$cache->set( $cacheKey, $file );
 		return $file;
 	}
 
