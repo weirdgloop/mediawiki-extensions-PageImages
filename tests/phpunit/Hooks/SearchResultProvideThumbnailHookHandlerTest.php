@@ -108,7 +108,7 @@ class SearchResultProvideThumbnailHookHandlerTest extends MediaWikiIntegrationTe
 			->method( 'getProperties' )
 			->with(
 				$this->anything(),
-				PageImages::getPropNames( PageImages::LICENSE_ANY )
+				(array)PageImages::getPropNames( PageImages::LICENSE_ANY )
 			)->willReturn( [
 				1 => [
 					PageImages::getPropName( true ) => 'File1.jpg'

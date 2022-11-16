@@ -38,7 +38,7 @@ class SearchResultProvideThumbnailHookHandler implements SearchResultProvideThum
 	private function getFileNamesForPageTitles( $pagesByPageId ): array {
 		$propValues = $this->pageProps->getProperties(
 			$pagesByPageId,
-			PageImages::getPropNames( PageImages::LICENSE_ANY )
+			(array)PageImages::getPropNames( PageImages::LICENSE_ANY )
 		);
 		$fileNames = array_map( static function ( $prop ) {
 			return $prop[ PageImages::getPropName( false ) ]
