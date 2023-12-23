@@ -4,7 +4,6 @@ namespace PageImages;
 
 use ApiBase;
 use ApiMain;
-use FauxRequest;
 use File;
 use IContextSource;
 use MapCacheLRU;
@@ -13,10 +12,11 @@ use MediaWiki\Cache\CacheKeyHelper;
 use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\Hook\InfoActionHook;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Request\FauxRequest;
+use MediaWiki\Title\Title;
 use MediaWiki\User\UserOptionsLookup;
 use OutputPage;
 use Skin;
-use Title;
 
 /**
  * @license WTFPL
@@ -219,37 +219,6 @@ class PageImages implements
 	}
 
 	/**
-	 * SpecialMobileEditWatchlist::images hook handler, adds images to mobile watchlist A-Z view
-	 *
-	 * @param IContextSource $context Context object. Ignored
-	 * @param array[] $watchlist Array of relevant pages on the watchlist, sorted by namespace
-	 * @param array[] &$images Array of images to populate
-	 */
-	public static function onSpecialMobileEditWatchlistImages(
-		IContextSource $context, array $watchlist, array &$images
-	) {
-		$ids = [];
-		foreach ( $watchlist as $ns => $pages ) {
-			foreach ( array_keys( $pages ) as $dbKey ) {
-				$title = Title::makeTitle( $ns, $dbKey );
-				// Getting page ID here is safe because SpecialEditWatchlist::getWatchlistInfo()
-				// uses LinkBatch
-				$id = $title->getArticleID();
-				if ( $id ) {
-					$ids[$id] = $dbKey;
-				}
-			}
-		}
-
-		$data = self::getImages( array_keys( $ids ) );
-		foreach ( $data as $id => $page ) {
-			if ( isset( $page['pageimage'] ) ) {
-				$images[ $page['ns'] ][ $ids[$id] ] = $page['pageimage'];
-			}
-		}
-	}
-
-	/**
 	 * Returns image information for pages with given ids
 	 *
 	 * @param int[] $pageIds
@@ -257,7 +226,7 @@ class PageImages implements
 	 *
 	 * @return array[]
 	 */
-	private static function getImages( array $pageIds, $size = 0 ) {
+	public static function getImages( array $pageIds, $size = 0 ) {
 		$ret = [];
 		foreach ( array_chunk( $pageIds, ApiBase::LIMIT_SML1 ) as $chunk ) {
 			$request = [
@@ -288,13 +257,13 @@ class PageImages implements
 	 * @param Skin $skin Skin object used to generate the page. Ignored
 	 */
 	public function onBeforePageDisplay( $out, $skin ): void {
-		global $wgLogo;
 		if ( !$out->getConfig()->get( 'PageImagesOpenGraph' ) ) {
 			return;
 		}
+		$logo = $out->getConfig()->get( 'Logo' );
 		// WGL - Use wiki logo as image for main page.
 		if ( $out->getContext()->getTitle()->isMainPage() ) {
-			$out->addMeta( 'og:image', wfExpandUrl( $wgLogo, PROTO_CANONICAL ) );
+			$out->addMeta( 'og:image', wfExpandUrl( $logo, PROTO_CANONICAL ) );
 			$out->addMeta( 'og:image:width', '135' );
 			$out->addMeta( 'og:image:height', '135' );
 			return;
@@ -302,7 +271,7 @@ class PageImages implements
 		$imageFile = self::getPageImage( $out->getContext()->getTitle() );
 		// WGL - Use wiki logo as fallback image.
 		if ( !$imageFile ) {
-			$out->addMeta( 'og:image', wfExpandUrl( $wgLogo, PROTO_CANONICAL ) );
+			$out->addMeta( 'og:image', wfExpandUrl( $logo, PROTO_CANONICAL ) );
 			$out->addMeta( 'og:image:width', '135' );
 			$out->addMeta( 'og:image:height', '135' );
 			return;

@@ -6,7 +6,7 @@
 	"license-name": "WTFPL",
 	"type": "api",
 	"requires": {
-		"MediaWiki": ">= 1.39.0"
+		"MediaWiki": ">= 1.41"
 	},
 	"APIPropModules": {
 		"pageimages": "PageImages\\ApiQueryPageImages"
@@ -31,23 +31,35 @@
 		"ParserModifyImageHTML": "parser",
 		"ParserTestGlobals": "parser",
 		"SearchResultProvideThumbnail": "search",
-		"SpecialMobileEditWatchlist::images": "PageImages\\PageImages::onSpecialMobileEditWatchlistImages"
+		"SpecialMobileEditWatchlist::images": "mobile"
 	},
 	"HookHandlers": {
 		"main": {
 			"class": "PageImages\\PageImages",
-			"services": [ "UserOptionsLookup" ]
+			"services": [
+				"UserOptionsLookup"
+			]
 		},
 		"parser": {
 			"class": "PageImages\\Hooks\\ParserFileProcessingHookHandlers",
-			"services": [ "RepoGroup", "MainWANObjectCache", "HttpRequestFactory" ]
+			"services": [
+				"RepoGroup",
+				"MainWANObjectCache",
+				"HttpRequestFactory",
+				"DBLoadBalancerFactory",
+				"TitleFactory"
+			]
 		},
 		"search": {
 			"class": "PageImages\\Hooks\\SearchResultProvideThumbnailHookHandler",
 			"services": [
+				"SearchResultThumbnailProvider",
 				"PageProps",
 				"RepoGroup"
 			]
+		},
+		"mobile": {
+			"class": "PageImages\\Hooks\\MobileFrontendHookHandlers"
 		}
 	},
 	"JobClasses": {
