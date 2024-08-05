@@ -281,6 +281,13 @@ class ParserFileProcessingHookHandlers implements
 			$score += 1000;
 		}
 
+		// WGL change: prefer more reasonably sized images
+		if ( $image->getFullHeight() >= 250 || $image->getFullWidth() >= 640 ) {
+			$score += 10;
+		} else if ( $image->getFullWidth() >= 480 ) {
+			$score += 5;
+		}
+
 		$denylist = $this->getDenylist();
 		if ( isset( $denylist[$image->getFileName()] ) ) {
 			$score = -1000;
