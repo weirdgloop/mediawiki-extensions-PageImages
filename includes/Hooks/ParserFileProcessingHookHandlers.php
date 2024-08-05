@@ -328,6 +328,13 @@ class ParserFileProcessingHookHandlers implements
 		$ratio = intval( $this->getRatio( $image ) * 10 );
 		$score += $this->scoreFromTable( $ratio, $wgPageImagesScores['ratio'] );
 
+		// WGL change: prefer more reasonably sized images
+		if ( $image->getFullHeight() >= 250 || $image->getFullWidth() >= 640 ) {
+			$score += 10;
+		} else if ( $image->getFullWidth() >= 480 ) {
+			$score += 5;
+		}
+
 		$denylist = $this->getDenylist();
 		if ( isset( $denylist[$image->getFileName()] ) ) {
 			$score = -1000;
