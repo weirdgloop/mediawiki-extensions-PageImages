@@ -321,6 +321,11 @@ class ParserFileProcessingHookHandlers implements
 			$score = $this->scoreFromTable( $image->getFullWidth(), $wgPageImagesScores['galleryImageWidth'] );
 		}
 
+		if ( in_array( 'pageimage', $classes ) ) {
+			// Strongly prefer images with class=pageimage
+			$score += 1000;
+		}
+
 		if ( isset( $wgPageImagesScores['position'][$position] ) ) {
 			$score += $wgPageImagesScores['position'][$position];
 		}

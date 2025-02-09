@@ -281,6 +281,12 @@ class ParserFileProcessingHookHandlersTest extends MediaWikiIntegrationTestCase 
 				0,
 				-1000
 			],
+			[
+				[ 'filename' => 'A.jpg', 'frame' => [ 'class' => 'pageimage' ] ],
+				0,
+				0,
+				1000
+			],
 		];
 	}
 
