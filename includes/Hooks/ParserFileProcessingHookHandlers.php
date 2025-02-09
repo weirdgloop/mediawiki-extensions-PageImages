@@ -340,6 +340,12 @@ class ParserFileProcessingHookHandlers implements
 			$score += 5;
 		}
 
+		// MCW change: add class to force page images
+		if ( in_array( 'forcepageimage', $classes ) ) {
+			// Only choose between images with class=forcepageimage
+			$score += 1000;
+		}
+
 		$denylist = $this->getDenylist();
 		if ( isset( $denylist[$image->getFileName()] ) ) {
 			$score = -1000;
