@@ -148,7 +148,11 @@
 		},
 		"PageImagesOpenGraphFallbackImage": {
 			"description": "A url to fallback image that will be shown when there is no image on a page.",
-			"value": false
+			"value": {
+				"url": null,
+				"width": null,
+				"height": null
+			}
 		}
 	},
 	"attributes": {

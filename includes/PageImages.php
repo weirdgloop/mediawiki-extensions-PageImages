@@ -17,6 +17,7 @@ use MediaWiki\MediaWikiServices;
 use MediaWiki\Output\Hook\BeforePageDisplayHook;
 use MediaWiki\Output\OutputPage;
 use MediaWiki\Request\FauxRequest;
+use MediaWiki\ResourceLoader\SkinModule;
 use MediaWiki\Settings\SettingsBuilder;
 use MediaWiki\Skin\Skin;
 use MediaWiki\Title\Title;
@@ -289,27 +290,31 @@ class PageImages implements
 	 * @param Skin $skin Skin object used to generate the page. Ignored
 	 */
 	public function onBeforePageDisplay( $out, $skin ): void {
-		global $wgLogo;
 		if ( !$out->getConfig()->get( 'PageImagesOpenGraph' ) ) {
 			return;
 		}
 
+		$fallback = $out->getConfig()->get( 'PageImagesOpenGraphFallbackImage' );
+		$fallbackImage = !empty( $fallback[ 'url' ] ) ? $fallback[ 'url' ]
+			: SkinModule::getAvailableLogos( $out->getConfig() )[ '1x' ];
+
 		// WGL - Use wiki logo as image for main page.
 		if ( $out->getContext()->getTitle()->isMainPage() ) {
-			$out->addMeta( 'og:image', wfExpandUrl( $wgLogo, PROTO_CANONICAL ) );
-			$out->addMeta( 'og:image:width', '135' );
-			$out->addMeta( 'og:image:height', '135' );
+			$out->addMeta( 'og:image', $this->urlUtils->expand( $fallbackImage, PROTO_CANONICAL ) ?? '' );
+			if ( $fallback[ 'width' ] && $fallback[ 'height' ] ) {
+				$out->addMeta( 'og:image:width', $fallback[ 'width' ] );
+				$out->addMeta( 'og:image:height', $fallback[ 'height' ] );
+			}
 			return;
 		}
 
 		$imageFile = $this->getImage( $out->getContext()->getTitle() );
+		// WGL - Use wiki logo as fallback image.
 		if ( !$imageFile ) {
-			// WGL - Use wiki logo as fallback image.
-			$fallback = $out->getConfig()->get( 'Logo' );
-			if ( $fallback ) {
-				$out->addMeta( 'og:image', $this->urlUtils->expand( $fallback, PROTO_CANONICAL ) ?? '' );
-				$out->addMeta( 'og:image:width', '135' );
-				$out->addMeta( 'og:image:height', '135' );
+			$out->addMeta( 'og:image', $this->urlUtils->expand( $fallbackImage, PROTO_CANONICAL ) ?? '' );
+			if ( $fallback[ 'width' ] && $fallback[ 'height' ] ) {
+				$out->addMeta( 'og:image:width', $fallback[ 'width' ] );
+				$out->addMeta( 'og:image:height', $fallback[ 'height' ] );
 			}
 			return;
 		}
