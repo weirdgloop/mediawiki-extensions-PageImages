@@ -16,6 +16,7 @@ use MediaWiki\MediaWikiServices;
 use MediaWiki\Output\Hook\BeforePageDisplayHook;
 use MediaWiki\Output\OutputPage;
 use MediaWiki\Request\FauxRequest;
+use MediaWiki\ResourceLoader\SkinModule;
 use MediaWiki\Title\Title;
 use MediaWiki\User\Options\UserOptionsLookup;
 use RepoGroup;
@@ -305,20 +306,28 @@ class PageImages implements
 		if ( !$out->getConfig()->get( 'PageImagesOpenGraph' ) ) {
 			return;
 		}
-		$logo = $out->getConfig()->get( 'Logo' );
-		// WGL - Use wiki logo as image for main page.
+
+		$fallback = $out->getConfig()->get( 'PageImagesOpenGraphFallbackImage' );
+		$fallbackImage = !empty( $fallback[ 'url' ] ) ? $fallback[ 'url' ]
+			: SkinModule::getAvailableLogos( $out->getConfig() )[ '1x' ];
+
+		// WGL - Use fallback as image for main page.
 		if ( $out->getContext()->getTitle()->isMainPage() ) {
-			$out->addMeta( 'og:image', wfExpandUrl( $logo, PROTO_CANONICAL ) );
-			$out->addMeta( 'og:image:width', '135' );
-			$out->addMeta( 'og:image:height', '135' );
+			$out->addMeta( 'og:image', wfExpandUrl( $fallbackImage, PROTO_CANONICAL ) );
+			if ( $fallback[ 'width' ] && $fallback[ 'height' ] ) {
+				$out->addMeta( 'og:image:width', $fallback[ 'width' ] );
+				$out->addMeta( 'og:image:height', $fallback[ 'height' ] );
+			}
 			return;
 		}
 		$imageFile = $this->getPageImageInternal( $out->getContext()->getTitle() );
-		// WGL - Use wiki logo as fallback image.
+		// WGL - Use fallback as image as fallback image.
 		if ( !$imageFile ) {
-			$out->addMeta( 'og:image', wfExpandUrl( $logo, PROTO_CANONICAL ) );
-			$out->addMeta( 'og:image:width', '135' );
-			$out->addMeta( 'og:image:height', '135' );
+			$out->addMeta( 'og:image', wfExpandUrl( $fallbackImage, PROTO_CANONICAL ) );
+			if ( $fallback[ 'width' ] && $fallback[ 'height' ] ) {
+				$out->addMeta( 'og:image:width', $fallback[ 'width' ] );
+				$out->addMeta( 'og:image:height', $fallback[ 'height' ] );
+			}
 			return;
 		}
 
