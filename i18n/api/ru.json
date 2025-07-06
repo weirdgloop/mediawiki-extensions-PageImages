@@ -3,8 +3,7 @@
 		"authors": [
 			"Fenixs-ru",
 			"Movses",
-			"Okras",
-			"Fenixs-ru"
+			"Okras"
 		]
 	},
 	"apihelp-query+pageimages-example-1": "Получить название и <kbd>100</kbd>-пиксельный эскиз изображения страницы об <kbd>Альберте Эйнштейне</kbd>.",
