@@ -17,6 +17,7 @@ use MediaWiki\Output\Hook\BeforePageDisplayHook;
 use MediaWiki\Output\OutputPage;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\ResourceLoader\SkinModule;
+use MediaWiki\Settings\SettingsBuilder;
 use MediaWiki\Title\Title;
 use MediaWiki\User\Options\UserOptionsLookup;
 use RepoGroup;
@@ -107,6 +108,24 @@ class PageImages implements
 		$this->dbProvider = $dbProvider;
 		$this->repoGroup = $repoGroup;
 		$this->userOptionsLookup = $userOptionsLookup;
+	}
+
+	/**
+	 * Set dynamic default value for PageImagesNamespaces configuration option.
+	 *
+	 * @param array $extInfo An array containing information about the extension
+	 * @param SettingsBuilder $settings
+	 */
+	public static function onRegistration(
+		array $extInfo,
+		SettingsBuilder $settings
+	) {
+		if ( $settings->getConfig()->get( 'PageImagesNamespaces' ) === false ) {
+			$settings->overrideConfigValue(
+				'PageImagesNamespaces',
+				$settings->getConfig()->get( MainConfigNames::ContentNamespaces )
+			);
+		}
 	}
 
 	/**
