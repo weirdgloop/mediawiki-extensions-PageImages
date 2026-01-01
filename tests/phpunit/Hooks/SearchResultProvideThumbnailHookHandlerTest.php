@@ -95,13 +95,13 @@ class SearchResultProvideThumbnailHookHandlerTest extends MediaWikiIntegrationTe
 			->method( 'getProperties' )
 			->with(
 				$this->anything(),
-				(array)PageImages::getPropNames( PageImages::LICENSE_FREE )
+				(array)PageImages::getPropNames( PageImages::LICENSE_ANY )
 			)->willReturn( [
 				1 => [
-					PageImages::getPropName( true ) => 'File1_free.jpg'
+					PageImages::getPropName( true ) => 'File1.jpg'
 				],
 				2 => [
-					PageImages::getPropName( true ) => 'File2_free.jpg',
+					PageImages::getPropName( true ) => 'File2.jpg',
 				] ] );
 
 		$repoGroup = $this->getMockBuilder( RepoGroup::class )
@@ -113,12 +113,12 @@ class SearchResultProvideThumbnailHookHandlerTest extends MediaWikiIntegrationTe
 			->method( 'findFile' )
 			->willReturnCallback( function ( $title ) {
 				switch ( $title ) {
-					case 'File1_free.jpg':
+					case 'File1.jpg':
 						return $this->getMockLocalFile(
 							SearchResultThumbnailProvider::THUMBNAIL_SIZE,
 							$title
 						);
-					case 'File2_free.jpg':
+					case 'File2.jpg':
 						return null;
 					default:
 						throw new LogicException( "Unexpected title $title" );
@@ -136,7 +136,7 @@ class SearchResultProvideThumbnailHookHandlerTest extends MediaWikiIntegrationTe
 		$this->assertNull( $results[ 4 ] );
 
 		$this->assertNotNull( $results[ 1 ] );
-		$this->assertSame( 'File1_free.jpg', $results[ 1 ]->getName() );
+		$this->assertSame( 'File1.jpg', $results[ 1 ]->getName() );
 		$this->assertSame(
 			SearchResultThumbnailProvider::THUMBNAIL_SIZE,
 			$results[ 1 ]->getWidth()
