@@ -294,56 +294,54 @@ class PageImages implements
 			return;
 		}
 
-		$fallback = $out->getConfig()->get( 'PageImagesOpenGraphFallbackImage' );
-		$fallbackImage = !empty( $fallback[ 'url' ] ) ? $fallback[ 'url' ]
-			: SkinModule::getAvailableLogos( $out->getConfig() )[ '1x' ];
-
 		// WGL - Use wiki logo as image for main page.
+		$logoPath = '';
 		if ( $out->getContext()->getTitle()->isMainPage() ) {
-			$out->addMeta( 'og:image', $this->urlUtils->expand( $fallbackImage, PROTO_CANONICAL ) ?? '' );
-			if ( $fallback[ 'width' ] && $fallback[ 'height' ] ) {
-				$out->addMeta( 'og:image:width', $fallback[ 'width' ] );
-				$out->addMeta( 'og:image:height', $fallback[ 'height' ] );
-			}
-			return;
+			$useLogo = true;
+		} else {
+			$imageFile = $this->getImage( $out->getContext()->getTitle() );
+			$useLogo = !$imageFile;
 		}
 
-		$imageFile = $this->getImage( $out->getContext()->getTitle() );
 		// WGL - Use wiki logo as fallback image.
-		if ( !$imageFile ) {
-			$out->addMeta( 'og:image', $this->urlUtils->expand( $fallbackImage, PROTO_CANONICAL ) ?? '' );
-			if ( $fallback[ 'width' ] && $fallback[ 'height' ] ) {
-				$out->addMeta( 'og:image:width', $fallback[ 'width' ] );
-				$out->addMeta( 'og:image:height', $fallback[ 'height' ] );
+		if ( $useLogo ) {
+			$logoPath = SkinModule::getAvailableLogos( $out->getConfig() )[ '1x' ] ?? '';
+			if ( !$logoPath ) {
+				return;
 			}
-			return;
+			$imageFile = $this->repoGroup->findFile( 'Wiki.png' );
+			if ( !$imageFile ) {
+				$out->addMeta( 'og:image', $this->urlUtils->expand( $logoPath, PROTO_CANONICAL ) ?? '' );
+				return;
+			}
 		}
 
 		// Open Graph protocol -- https://ogp.me/
 		// See https://developers.facebook.com/docs/sharing/best-practices?locale=en_US#images
 		// T295521: Updated in 2025, WhatsApp expects images >300px, but <600KB
 		// See https://developers.facebook.com/docs/whatsapp/link-previews/
-		// WGL start - Hack around transform() not failing for larger than original images.
+		// WGL - Hack around transform() not failing for larger than original images.
 		$maxWidth = $imageFile->getWidth();
-		if ( $maxWidth <= 1200 ) {
-			if ( $imageFile->getUrl() ) {
-				$url = $this->urlUtils->expand( $imageFile->getUrl(), PROTO_CANONICAL );
+		if ( !$useLogo && $maxWidth > 1200 ) {
+			$thumb = $imageFile->transform( [ 'width' => 1200, 'height' => 1200 ] );
+			if ( $thumb && $thumb->getUrl() ) {
+				$url = $this->urlUtils->expand( $thumb->getUrl(), PROTO_CANONICAL );
 				if ( $url ) {
 					$out->addMeta( 'og:image', $url );
-					$out->addMeta( 'og:image:width', (string)$imageFile->getWidth() );
-					$out->addMeta( 'og:image:height', (string)$imageFile->getHeight() );
+					$out->addMeta( 'og:image:width', (string)$thumb->getWidth() );
+					$out->addMeta( 'og:image:height', (string)$thumb->getHeight() );
+					return;
 				}
 			}
-			return;
 		}
-		// WGL end
-		$thumb = $imageFile->transform( [ 'width' => 1200, 'height' => 1200 ] );
-		if ( $thumb && $thumb->getUrl() ) {
-			$url = $this->urlUtils->expand( $thumb->getUrl(), PROTO_CANONICAL );
+		// WGL - Fallback to original image if thumbnailing fails.
+		if ( $imageFile->getUrl() ) {
+			// WGL - Don't use immutable path for wiki logo.
+			$url = $this->urlUtils->expand( $useLogo ? $logoPath : $imageFile->getUrl(), PROTO_CANONICAL );
 			if ( $url ) {
 				$out->addMeta( 'og:image', $url );
-				$out->addMeta( 'og:image:width', (string)$thumb->getWidth() );
-				$out->addMeta( 'og:image:height', (string)$thumb->getHeight() );
+				$out->addMeta( 'og:image:width', (string)$imageFile->getWidth() );
+				$out->addMeta( 'og:image:height', (string)$imageFile->getHeight() );
 			}
 		}
 	}
